@@ -19,6 +19,8 @@ Han, J., Chang, C. Y.-Y., Gu, L., Zhang, Y., Meeker, E. W., Magney, T. S., Walke
 
 Ball, J. T., Woodrow, I. E., & Berry, J. A. (1987). A Model Predicting Stomatal Conductance and its Contribution to the Control of Photosynthesis under Different Environmental Conditions. In J. Biggins (Ed.), Progress in Photosynthesis Research (pp. 221–224). Springer Netherlands. https://doi.org/10.1007/978-94-017-0519-6_48
 
-Campbell, G. S., & Norman, J. M. (1977). An Introduction to Environmental Biophysics (G. S. Campbell & J. M. Norman, Eds.). Springer New York. https://doi.org/10.1007/978-1-4612-1626-1_1De Pury, D. G. G., & Farquhar, G. D. (1997). Simple scaling of photosynthesis from leaves to canopies without the errors of big-leaf models. Plant, Cell and Environment, 20(5), 537–557. https://doi.org/10.1111/j.1365-3040.1997.00094.x
+Campbell, G. S., & Norman, J. M. (1977). An Introduction to Environmental Biophysics (G. S. Campbell & J. M. Norman, Eds.). Springer New York. https://doi.org/10.1007/978-1-4612-1626-1_1
+
+De Pury, D. G. G., & Farquhar, G. D. (1997). Simple scaling of photosynthesis from leaves to canopies without the errors of big-leaf models. Plant, Cell and Environment, 20(5), 537–557. https://doi.org/10.1111/j.1365-3040.1997.00094.x
 
 
