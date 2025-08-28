@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="gas_exchange.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="radtrans.h" />
+    <ClInclude Include="Sif.h" />
+    <ClInclude Include="solar.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="gas_exchange.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="radtrans.cpp" />
+    <ClCompile Include="solar.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="Photosynthesis.cpp" />
+  </ItemGroup>
+</Project>
