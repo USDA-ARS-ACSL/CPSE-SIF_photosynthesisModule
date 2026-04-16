@@ -1,3 +1,4 @@
 CornClimateNE2.dat,Maize,SunlitShadedNo,CornSIFNE2.dat,MaizeSet1_NE2.dat
-CornClimateNE2.dat,Maize,SunlitShadedYes, ,MaizeSet1_NE2fVcb.dat
-
+CornClimateNE3.dat,Maize,SunlitShadedNo,CornSIFNE3.dat,MaizeSet2_NE3.dat
+SoyClimateNE2.dat,Soybean,SunlitShadedNo,SoySIFNE2.dat,SoySet1_NE2.dat
+SoyClimateNE3.dat,Soybean,SunlitShadedNo,SoySIFNE3.dat,SoySet2_NE3.dat

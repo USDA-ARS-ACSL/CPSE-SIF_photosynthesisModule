@@ -1,6 +1,6 @@
 ﻿/*! @file
 *  Original version: No sif and no sunlit/shaded version
-* -----------------------------------------------------------------  
+* -----------------------------------------------------------------
 * SIF-ENABLED-PHOTOSYNTHESIS
 * MLR-SIF model integration into C3 and C4 photosynthesis models: VERSION 0.1.0-Dev
 * -----------------------------------------------------------------
@@ -10,25 +10,25 @@
 * https://lieth.ucdavis.edu/pub/Pub058_AnnBot91-771_KimLieth.pdf
 * -----------------------------------------------------------------
 
-*  
+*
 *  Can simulate sif based C3, C4 photosynthesis
 *  Have sunlit and shaded components
-*  Can run multiple files at once: climate * sif* crop 
-* 
-* 
+*  Can run multiple files at once: climate * sif* crop
+*
+*
 *  Defines the entry point for the console application.
-* 
+*
 *  This program reads simulation run definitions from "run.dat" (each line formatted as:
 *  ClimateIn.dat, maize, SIF1.dat).
 *  ClimateIn.dat, Maize, SIF3.dat
 *  ClimateIn.dat, Potato, SIF2.dat
 *  ClimateIn.dat, Rice, SIF.dat
-* 
+*
 *  It reads the entire "parameters.csv" file once into memory,
 *  then for each run it looks up the species-specific parameters from that stored data.
-* 
+*
 *  Next, it reads the climate and SIF data, runs the photosynthesis model for sunlit and shaded, and writes result
-*  to "Results.dat".  
+*  to "Results.dat".
 */
 
 
@@ -58,7 +58,7 @@ using namespace photomod; // Bring the photosynthesis model namespace into scope
 //humidity (%)
 //wind (m s-1)
 //a flag (0,1) to tell the program if constant temperature is used (or let temperature of leaf
- 
+
 //PAR                   (umol photons m-2 s-1)
 //Net Photosynthesis    (umol CO2 m-2 s-1)
 //Gross Photosynthesis
@@ -93,7 +93,7 @@ static inline string trim(const string& s)
 {
     string result = s;
     result.erase(remove(result.begin(), result.end(), ' '), result.end());
-    return result; 
+    return result;
 }
 
 //---------------------------------------------------------------------
@@ -113,7 +113,7 @@ bool parseParameterLine(const string& line, CGasExchange::tParms& param)
     // Use a stringstream to split the line by commas
     stringstream ss(line);
     string token;
-    while (getline(ss, token, ','))  
+    while (getline(ss, token, ','))
     {
         // Trim spaces from each token and add to the vector
         tokens.push_back(trim(token));
@@ -188,8 +188,8 @@ bool parseParameterLine(const string& line, CGasExchange::tParms& param)
 // Main function
 int _tmain(int argc, _TCHAR* argv[])
 {
-   
-    
+
+
     //-----------------------------------------------------------------
     // Step 1: Declare variables for environmental and other simulation data.
     //-----------------------------------------------------------------
@@ -206,12 +206,12 @@ int _tmain(int argc, _TCHAR* argv[])
     double PFD; //!<jj
     double Temperature, RelativeHumidity, Wind, CO2, LAI, ql_sunlit_shaded = 0.0;
     double kdf_sunlit_shaded = 0.0;
-    double PhiPS2_sunlit_shaded=0.0;
+    double PhiPS2_sunlit_shaded = 0.0;
     double Pressure = 100; // Pressure  
-    double DayOfYear, Time, Lat, Lon, Alt, SolRad;
-    double SifUnitConv=1, SIFtotalFactor=0.0;
+    double DayOfYear, Time, Lat, Lon, Alt, SolRad, K, SIFtotal;
+    double SifUnitConv = 1, SIFtotalFactor = 0.0;
     const double pi = 3.141592653589793;
- 
+
     // SIF variables declared:
         //To simulate the photosythesis based on the SIF : steps for A using SIF is given in
         //https ://nph.onlinelibrary.wiley.com/doi/full/10.1111/nph.18045
@@ -221,7 +221,7 @@ int _tmain(int argc, _TCHAR* argv[])
         //There are some specific inputs for shaded and sunlit
         //Reading the inputs for those here : Jday, Date, Hour, ql_sunlit, ql_shaded,
         //Kdf_sunlit, Kdf_shaded, PhiPS2max sunlit, PhiPS2max shaded, e(will modify these)
- 
+
 
         //light response curves for many crops : https://leafweb.org/information/data-publications/
         //qL can be estimated based on par.the equation can be a quadratic function(PAR)
@@ -399,7 +399,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 
 
- 
+
 
 
         //-----------------------------------------------------------------
@@ -496,7 +496,7 @@ int _tmain(int argc, _TCHAR* argv[])
             double Lon = (pnt ? atof(pnt) : 0.0);
             pnt = strtok_s(NULL, pDelim, &ctx);
             double Alt = (pnt ? atof(pnt) : 0.0);
-            pnt = strtok_s(NULL, pDelim, &ctx); 
+            pnt = strtok_s(NULL, pDelim, &ctx);
             double SolRad = (pnt ? atof(pnt) : 0.0); //Total Radiation incident at soil surface(Wm - 2)
             pnt = strtok_s(NULL, pDelim, &ctx);
             double PFD = (pnt ? atof(pnt) : 0.0); //umol s-1 m-2 (note: par *4.6; // conversion from PAR in Wm-2 to umol s-1 m-2)
@@ -525,7 +525,7 @@ int _tmain(int argc, _TCHAR* argv[])
             shadedPFD = light->Qsh();
             sunlitLAI = light->LAIsl();
             shadedLAI = light->LAIsh();
-         
+
 
             //-----------------------------------------------------------------
             // Step 13: Read SIF data if Sif yes
@@ -605,6 +605,47 @@ int _tmain(int argc, _TCHAR* argv[])
 
                 if (sunlitShadedFlag == "SunlitShadedYes")
                 {
+
+                    if (runSpecies == "maize")
+                    {
+
+                        ql_sunlit = 0.89 * exp(-0.00060 * sunlitPFD);  // Table S3  in Han et al. (2022))
+                        ql_shaded = 0.89 * exp(-0.00060 * shadedPFD);
+
+                        kdf_sunlit = 13.5;
+                        kdf_shaded = 13.5;
+                        PhiPS2_sunlit = 0.83;
+                        PhiPS2_shaded = 0.83;
+                    }
+
+                    if (runSpecies == "soybean")
+                    {
+                        // For other species, we can use the provided values directly.
+                        ql_sunlit = 0.77 * exp(-0.00059 * sunlitPFD); //Table S3 in Han et al. (2022))
+                        ql_shaded = 0.77 * exp(-0.00059 * shadedPFD);
+
+                        kdf_sunlit = 13;
+                        kdf_shaded = 13;
+                        PhiPS2_sunlit = 0.81;
+                        PhiPS2_shaded = 0.81;
+
+
+                    }
+
+                    // NOTE: in the input file for sif, there are two col
+                    //one for SIFsunlit and SIFshaded
+                    // if we dont have seperate SIF for sunlit and shaded, both are enetered as SIF total. 
+                    // means SIFsunlit = SIFshaded = SIFtotal. 
+                    SIFtotal = sifSunlit;
+                    // In that case, we can use the PFD to partition the SIF total into sunlit and shaded.
+
+                    // https://www.sciencedirect.com/science/article/abs/pii/S0168192324002053
+
+
+
+                    K = ((sunlitPFD * shadedLAI * 1.1) / (sunlitLAI * shadedPFD));
+                    sifShaded = SIFtotal / (K * sunlitLAI + shadedLAI);
+                    sifSunlit = sifShaded * K;
                     // Pass the SIF and climate parameters to the gas exchange objects.
                     sunlit->SetVal(sunlitPFD, Temp, CO2, RH, Wind, sunlitLAI, Pressure, ConstantTemperature,
                         SIF_GasEx, sifSunlit, ql_sunlit, kdf_sunlit, PhiPS2_sunlit, fesc_sun);
@@ -613,43 +654,45 @@ int _tmain(int argc, _TCHAR* argv[])
                 }
                 else
                 {
-                   // No sunlit/shaded specific- all read as sunlit (to have minimal changes in the input
+                    // No sunlit/shaded specific- all read as sunlit (to have minimal changes in the input
 
-				   //SCOPE can have each component as sunlit shaded (e.g., fesc, ql, kdf, etc.)
-                   // ql_sunlit = (ql_shaded * shadedLAI + ql_sunlit * sunlitLAI);
-                   //sunlit_shaded->SetVal(sunlitPFD + shadedPFD, Temp, CO2, RH, Wind, LAI, Pressure, ConstantTemperature,
-                   // SIF_GasEx, sifSunlit * sunlitLAI + sifShaded * shadedLAI, ql_sunlit, (kdf_sunlit + kdf_shaded) / 2, PhiPS2_sunlit, fesc_sun * sunlitLAI + fesc_sha * shadedLAI);
-                   // Note: The below is when canopy level measurements (e.g, field level, EC and SIF tower)
-                   // No sunlit/shaded specific- SIF canopy readed as sunlit (to have minimal changes in the input)
-    
+                    //SCOPE can have each component as sunlit shaded (e.g., fesc, ql, kdf, etc.)
+                    // ql_sunlit = (ql_shaded * shadedLAI + ql_sunlit * sunlitLAI);
+                    //sunlit_shaded->SetVal(sunlitPFD + shadedPFD, Temp, CO2, RH, Wind, LAI, Pressure, ConstantTemperature,
+                    // SIF_GasEx, sifSunlit * sunlitLAI + sifShaded * shadedLAI, ql_sunlit, (kdf_sunlit + kdf_shaded) / 2, PhiPS2_sunlit, fesc_sun * sunlitLAI + fesc_sha * shadedLAI);
+                    // Note: The below is when canopy level measurements (e.g, field level, EC and SIF tower)
+                    // No sunlit/shaded specific- SIF canopy readed as sunlit (to have minimal changes in the input)
+
                     if (runSpecies == "maize")
                     {
-                       
-                        ql_sunlit = 0.83 * exp(-0.00063 * sunlitPFD);  // Table S3  in Han et al. (2022))
-                        ql_shaded = 0.83 * exp(-0.00063 * shadedPFD);
+
+                        ql_sunlit = 0.89 * exp(-0.00060 * sunlitPFD);  // Table S3  in Han et al. (2022))
+                        ql_shaded = 0.89 * exp(-0.00060 * shadedPFD);
+
+
                         ql_sunlit_shaded = (ql_sunlit * sunlitLAI + ql_shaded * shadedLAI) / LAI;
                         kdf_sunlit_shaded = 13.5;
                         PhiPS2_sunlit_shaded = 0.83;
                     }
-                    
+
                     if (runSpecies == "soybean")
                     {
                         // For other species, we can use the provided values directly.
-                        ql_sunlit = 0.80 * exp(-0.00095 * sunlitPFD); //Table S3 in Han et al. (2022))
-                        ql_shaded = 0.80 * exp(-0.00095 * shadedPFD);
-                        ql_sunlit_shaded = (ql_sunlit * sunlitLAI + ql_shaded * shadedLAI) / LAI; 
+                        ql_sunlit = 0.77 * exp(-0.00059 * sunlitPFD); //Table S3 in Han et al. (2022))
+                        ql_shaded = 0.77 * exp(-0.00059 * shadedPFD);
+                        ql_sunlit_shaded = (ql_sunlit * sunlitLAI + ql_shaded * shadedLAI) / LAI;
                         kdf_sunlit_shaded = 13;
                         PhiPS2_sunlit_shaded = 0.81;
 
 
                     }
 
- 
-                  
-                    sunlit_shaded->SetVal(sunlitPFD+shadedPFD, Temp, CO2, RH, Wind, LAI, Pressure, ConstantTemperature,
-                    SIF_GasEx, sifSunlit, ql_sunlit_shaded, kdf_sunlit_shaded, PhiPS2_sunlit_shaded, fesc_sun);
+
+
+                    sunlit_shaded->SetVal(sunlitPFD + shadedPFD, Temp, CO2, RH, Wind, LAI, Pressure, ConstantTemperature,
+                        SIF_GasEx, sifSunlit, ql_sunlit_shaded, kdf_sunlit_shaded, PhiPS2_sunlit_shaded, fesc_sun);
                 }
-               
+
             }
             else
             {
@@ -672,9 +715,9 @@ int _tmain(int argc, _TCHAR* argv[])
                         SIF_GasEx, 0.0, 0.0, 0.0, 0.0, 0.0);
                 }
                 else
-                { 
-                sunlit_shaded->SetVal(PFD, Temp, CO2, RH, Wind, LAI, Pressure, ConstantTemperature,
-                    SIF_GasEx, 0.0, 0.0, 0.0, 0.0, 0.0);
+                {
+                    sunlit_shaded->SetVal(PFD, Temp, CO2, RH, Wind, LAI, Pressure, ConstantTemperature,
+                        SIF_GasEx, 0.0, 0.0, 0.0, 0.0, 0.0);
                 }
 
                 // Debug output: Print the climate and SIF data
@@ -707,7 +750,7 @@ int _tmain(int argc, _TCHAR* argv[])
             double Anet = 0.0, Agross = 0.0, VPD = 0.0, LeafTemperature = 0.0;
             double BoundaryLayerConductance = 0.0, InternalCO2 = 0.0;
             double Respiration = 0.0, StomatalConductance = 0.0, Transpiration = 0.0;
-            double AjLeaf = 0.0, AcLeaf = 0.0, AvLeaf = 0.0, ApLeaf = 0.0,Jval = 0.0;
+            double AjLeaf = 0.0, AcLeaf = 0.0, AvLeaf = 0.0, ApLeaf = 0.0, Jval = 0.0;
             double GammaVal = 0.0, GammaC4Val = 0.0, Cs_stom_conductanceVal = 0.0;
 
 
@@ -719,9 +762,9 @@ int _tmain(int argc, _TCHAR* argv[])
                 VPD = sunlit->get_VPD();//vapor pressure deficit (kpa)
                 LeafTemperature = sunlit->get_LeafTemperature();//leaf temperature (C)
                 BoundaryLayerConductance = sunlit->get_BoundaryLayerConductance(); //boundary layer conductance(mol m - 2 s - 1)
-                InternalCO2 = (sunlit->get_Ci() * sunlitLAI +shaded->get_Ci() * shadedLAI)/(sunlitLAI+ shadedLAI);//internal CO2 concentration (umol mol-1)
+                InternalCO2 = (sunlit->get_Ci() * sunlitLAI + shaded->get_Ci() * shadedLAI) / (sunlitLAI + shadedLAI);//internal CO2 concentration (umol mol-1)
                 Respiration = (sunlit->get_Respiration() * sunlitLAI + shaded->get_Respiration() * shadedLAI); //(umol CO2 m-2 s-1)
-                StomatalConductance = __max(0, ((sunlit->get_StomatalConductance() * sunlitLAI + shaded->get_StomatalConductance() * shadedLAI) ));//average stomatal conductance to water vapor (mol m-2 s-1)
+                StomatalConductance = __max(0, ((sunlit->get_StomatalConductance() * sunlitLAI + shaded->get_StomatalConductance() * shadedLAI)));//average stomatal conductance to water vapor (mol m-2 s-1)
                 Transpiration = (sunlit->get_Transpiration() * sunlitLAI + shaded->get_Transpiration() * shadedLAI);//(umol H2O m-2 s-1)
 
                 AjLeaf = (sunlit->get_Aj() * sunlitLAI + shaded->get_Aj() * shadedLAI); //(umol CO2 m - 2 s - 1)
@@ -739,21 +782,21 @@ int _tmain(int argc, _TCHAR* argv[])
             else
             {
 
-				Anet = sunlit_shaded->get_ANet(); //(umol CO2 m - 2 s - 1) ! SIF is already at canopy level, so no need to multiply by LAI
+                Anet = sunlit_shaded->get_ANet(); //(umol CO2 m - 2 s - 1) ! SIF is already at canopy level, so no need to multiply by LAI
                 Agross = sunlit_shaded->get_AGross(); //(umol CO2 m - 2 s - 1)
                 VPD = sunlit_shaded->get_VPD();//vapor pressure deficit (kpa)
                 LeafTemperature = sunlit_shaded->get_LeafTemperature();//leaf temperature (C)
                 BoundaryLayerConductance = sunlit_shaded->get_BoundaryLayerConductance(); //boundary layer conductance(mol m - 2 s - 1)
                 InternalCO2 = (sunlit_shaded->get_Ci());//internal CO2 concentration (umol mol-1)
                 Respiration = (sunlit_shaded->get_Respiration()); //(umol CO2 m-2 s-1)
-                StomatalConductance = __max(0, (sunlit_shaded->get_StomatalConductance()))/LAI;//average stomatal conductance to water vapor (mol m-2 s-1)
+                StomatalConductance = __max(0, (sunlit_shaded->get_StomatalConductance())) / LAI;//average stomatal conductance to water vapor (mol m-2 s-1)
                 Transpiration = (sunlit_shaded->get_Transpiration());//(umol H2O m-2 s-1)
 
                 AjLeaf = sunlit_shaded->get_Aj(); //(umol CO2 m - 2 s - 1)
                 AcLeaf = sunlit_shaded->get_Ac(); //(umol CO2 m - 2 s - 1)
                 AvLeaf = sunlit_shaded->get_Av(); //(umol CO2 m - 2 s - 1)
                 ApLeaf = sunlit_shaded->get_Ap(); //(umol CO2 m - 2 s - 1)
-                Jval = sunlit_shaded->get_J()/LAI;
+                Jval = sunlit_shaded->get_J() / LAI;
                 GammaVal = sunlit_shaded->get_GammaValueC3_C4();
                 GammaC4Val = sunlit_shaded->get_GammaC4();                // sunlit and shaded can have same gammaC4
                 Cs_stom_conductanceVal = sunlit_shaded->get_Cs_stom_conductance();
@@ -761,7 +804,7 @@ int _tmain(int argc, _TCHAR* argv[])
             }
             // if no sunlit shaded condition
 
-           
+
 
 
 
@@ -798,7 +841,7 @@ int _tmain(int argc, _TCHAR* argv[])
                 kdf_shaded,           // SIF parameter: kdf_shaded.
                 PhiPS2_sunlit,        // SIF parameter: PhiPS2 _sunlit
                 PhiPS2_shaded,          // SIF parameter: PhiPS2_shded.
-                fesc_sun+fesc_sha,                 // SIF parameter: fesc
+                fesc_sun + fesc_sha,                 // SIF parameter: fesc
                 Anet,                 // Model output: Net photosynthesis
                 Agross,               // Model output: Gross photosynthesis
                 VPD,                  // Model output: Vapor Pressure Deficit
@@ -848,12 +891,12 @@ int _tmain(int argc, _TCHAR* argv[])
                 sun->GetPFDDiffuse(),
                 sun->GetPFDDirect(),
                 sun->GetPFDTotal(),
-                light->GetZenith(), 
+                light->GetZenith(),
                 sun->GetPotentialPARDirect(),
                 sun->GetPotentialPARDiffuse(),
                 sun->GetPotentialNIRDirect(),
                 sun->GetPotentialNIRDiffuse()
-              
+
 
             );
 
@@ -872,7 +915,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
         dataFile.close();
         if (sFlag == "SIFyes")
-            sifHandle.close(); 
+            sifHandle.close();
         fclose(pFile);
 
         auto end = std::chrono::high_resolution_clock::now();
@@ -886,7 +929,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 
     cout << "Done." << endl;
-   
+
 
     return 0;
 }

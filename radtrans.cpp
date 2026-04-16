@@ -184,7 +184,7 @@ if (IsLeafAngleFactorUsed == true) {
 		   K = 0.0;
 	   }
 	   else  {K = -log(FDiffuse)/LA;}
-	   clump = 1.8;
+	 
 
    KdVal=K*clump;
   }

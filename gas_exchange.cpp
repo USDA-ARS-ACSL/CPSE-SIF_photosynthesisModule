@@ -202,33 +202,20 @@ namespace photomod
 		//** \endcode
 		// These variables hold temporary calculations
 		double alpha, Kc, Ko, gamma, Ia,Jmax, Vcmax, TPU, J, Av, Aj, Ap, Ac, Km, Ca, Cc, P;
-		gamma = 36.9 + 1.88*(Tleaf-25)+0.036*Square(Tleaf-25);  // CO2 compensation point in the absence of mitochondirial respiration, in ubar}
+
+		gamma = 36.9 + 1.88 * (Tleaf - 25) + 0.036 * Square(Tleaf - 25);  // CO2 compensation point in the absence of mitochondirial respiration, in ubar}
 		GammaValue = gamma;
-		//* Light response function parameters */
-		Ia = PhotoFluxDensity*(1-scatt);    //* absorbed irradiance */
-		alpha = (1-f)/2; // *!apparent quantum efficiency, params adjusted to get value 0.3 for average C3 leaf
 
 		AssimilationNet = 0;
 
 		//* other input parameters and constants */
-		P  = Press/100; //Press is kPa. Used to convert mole fraction to partial pressure
-		Ca = CO2*P; //* conversion to partial pressure */ 
-		Kc = Kc25*exp(Eac*(Tleaf-25)/(298*R*(Tleaf+273)));
-		Ko = Ko25*exp(Eao*(Tleaf-25)/(298*R*(Tleaf+273)));
-		Km = Kc*(1+O/Ko); //* effective M-M constant for Kc in the presence of O2 */
 		DarkRespiration = sParms.Rd25*exp(sParms.Ear*(Tleaf-25)/(298*R*(Tleaf+273)));
-		Jmax = sParms.Jm25*exp(((Tleaf-25)*sParms.Eaj)/(R*(Tleaf+273)*298))*
-			(1+exp((sParms.Sj*298-sParms.Hj)/(R*298)))/
-			(1+exp((sParms.Sj*(Tleaf+273)-sParms.Hj)/(R*(Tleaf+273)))); // de Pury 1997
-		Vcmax = sParms.Vcm25*exp(((Tleaf-25)*sParms.EaVc)/(R*(Tleaf+273)*298))*
-			(1+exp((sParms.Sv*298-sParms.Hv)/(R*298)))/
-			(1+exp((sParms.Sv*(Tleaf+273)-sParms.Hv)/(R*(Tleaf+273)))); // Used peaked response, DHF
-		TPU = sParms.TPU25*exp(sParms.Eap*(Tleaf-25)/(298*R*(Tleaf+273)));
+
 		Cc = Ci; // assume infinite gi
 
 		StomatalConductance = CalcStomatalConductance(); // Initial value
 		BoundaryLayerConductance=  CalcTurbulentVaporConductance();
-		Av = (Vcmax*(Cc-gamma))/(Cc+Km);  //Wc
+	
 
 		if (SIF_GasEx == 1)
 		{
@@ -241,11 +228,36 @@ namespace photomod
 			AjValue = 00;
 			AcValue = Ac;
 			ApValue = 0.0;
-			
+			AvValue = 0.0;
 
 		}
 		else
 		{
+
+			//* Light response function parameters */
+			Ia = PhotoFluxDensity * (1 - scatt);    //* absorbed irradiance */
+			alpha = (1 - f) / 2; // *!apparent quantum efficiency, params adjusted to get value 0.3 for average C3 leaf
+
+			
+			//* other input parameters and constants */
+			P = Press / 100; //Press is kPa. Used to convert mole fraction to partial pressure
+			Ca = CO2 * P; //* conversion to partial pressure */ 
+			Kc = Kc25 * exp(Eac * (Tleaf - 25) / (298 * R * (Tleaf + 273)));
+			Ko = Ko25 * exp(Eao * (Tleaf - 25) / (298 * R * (Tleaf + 273)));
+			Km = Kc * (1 + O / Ko); //* effective M-M constant for Kc in the presence of O2 */
+
+
+
+			Jmax = sParms.Jm25 * exp(((Tleaf - 25) * sParms.Eaj) / (R * (Tleaf + 273) * 298)) *
+				(1 + exp((sParms.Sj * 298 - sParms.Hj) / (R * 298))) /
+				(1 + exp((sParms.Sj * (Tleaf + 273) - sParms.Hj) / (R * (Tleaf + 273)))); // de Pury 1997
+			Vcmax = sParms.Vcm25 * exp(((Tleaf - 25) * sParms.EaVc) / (R * (Tleaf + 273) * 298)) *
+				(1 + exp((sParms.Sv * 298 - sParms.Hv) / (R * 298))) /
+				(1 + exp((sParms.Sv * (Tleaf + 273) - sParms.Hv) / (R * (Tleaf + 273)))); // Used peaked response, DHF
+			TPU = sParms.TPU25 * exp(sParms.Eap * (Tleaf - 25) / (298 * R * (Tleaf + 273)));
+			
+			Av = (Vcmax * (Cc - gamma)) / (Cc + Km);  //Wc			
+			
 			J = (((alpha * Ia + Jmax) - sqrt(Square(alpha * Ia + Jmax) - 4 * alpha * Ia * (Jmax)*sParms.Theta)) / (2 * sParms.Theta));
 			Aj = J*(Cc-gamma)/(4*(Cc+2*gamma));
 			Ap = 3*TPU;
@@ -301,51 +313,13 @@ namespace photomod
 		double Vpmax, Jmax, Vcmax, Eac, Om, Rm, J, Ac1, Ac2, Ac, Aj1,
 			Aj2, Aj, Vp1, Vp2, Vp, P,  Ca, Cm, Vpr,
 			Os, GammaStar, Gamma, a1, b1, c1; //secondary calculated variables
-
-		//* Light response function parameters */
-		Ia = PhotoFluxDensity*(1-scatt);    //* absorbed irradiance */
-		I2 = Ia*(1-f)/2;    //* useful light absorbed by PSII */
-
-
-
-
-		//* other input parameters and constants */
-		P  = Press/100;
-		Ca = CO2*P; //* conversion to partial pressure Atmospheric partial pressure of CO2, kPa*/
-		Om = O;   //* mesophyle O2 partial pressure */
-		Eac=sParms.EaVc;
-
-		Kp = Kp25*pow(Q10,(Tleaf-25.0)/10.0);
-		Vpr = Vpr25*pow(Q10,(Tleaf-25.0)/10.0);
-		Kc = Kc25*exp(Eac*(Tleaf-25)/(298*R*(Tleaf+273))); //Kc adjusted for temperature
-		Ko = Ko25*exp(Eao*(Tleaf-25)/(298*R*(Tleaf+273)));
-		Km = Kc*(1+Om/Ko); //* effective M-M constant for Kc in the presence of O2 */
-		DarkRespiration = sParms.Rd25*exp(sParms.Ear*(Tleaf-25)/(298*R*(Tleaf+273)));
-		// The following are Arrhenius Equations for parameter temperature dependencies
-		// Vpm25 (PEPC activity rate) , Vcm25  (Rubisco Capacity rate) and Jm25 (Whole chain electron transport rate) are the rates at 25C for Vp, Vc and Jm
-		Vpmax = sParms.Vpm25*exp(sParms.EaVp*(Tleaf-25)/(298*R*(Tleaf+273)));
-		Vcmax = sParms.Vcm25*exp(sParms.EaVc*(Tleaf-25)/(298*R*(Tleaf+273)));
-		Jmax = sParms.Jm25*exp((((Tleaf+273)-298)*sParms.Eaj)/(R*(Tleaf+273)*298))*(1+exp((sParms.Sj*298-sParms.Hj)/(R*298)))
-			/(1+exp((sParms.Sj*(Tleaf+273)-sParms.Hj)/(R*(Tleaf+273.0))));
-		Rm = 0.5*DarkRespiration;
-
-		Cm=Ci; //* mesophyle CO2 partial pressure, ubar, one may use the same value as Ci assuming infinite mesohpyle conductance */
-		double gs_last=0;
-
+		
+		double gs_last = 0;
+		
+		DarkRespiration = sParms.Rd25 * exp(sParms.Ear * (Tleaf - 25) / (298 * R * (Tleaf + 273)));
+		Cm = Ci; //* mesophyle CO2 partial pressure, ubar, one may use the same value as Ci assuming infinite mesohpyle conductance */
 		StomatalConductance = CalcStomatalConductance();
-		Vp1 = (Cm*Vpmax)/(Cm+Kp); //* PEP carboxylation rate, that is the rate of C4 acid generation  Eq 1 in Kim 2007*/
-		Vp2 = Vpr;
-		Vp = __max(__min(Vp1, Vp2),0);
-		//* Enzyme limited A (Rubisco or PEP carboxylation */
-		Ac1 = (Vp+gbs*Cm-Rm);
-		Ac2 = (Vcmax-DarkRespiration);
-		//* Quadratic expression to solve for Ac */
-		a1 = 1-(alpha/0.047)*(Kc/Ko);
-		b1 = -(Ac1 + Ac2 + gbs*Km + (alpha/0.047)*(gamma1*Vcmax + DarkRespiration*Kc/Ko));
-		c1 = Ac1*Ac2-(Vcmax*gbs*gamma1*Om+DarkRespiration*gbs*Km);
-		Ac = QuadSolnLower(a1,b1,c1); // this formulation would need gamma
-		Ac = __min(Ac1,Ac2);//this formulation does not need gamma- co2 compensation point
-		//* Light and electron transport limited  A mediated by J */
+		
 		if (SIF_GasEx == 1)
 		{
 			
@@ -358,9 +332,53 @@ namespace photomod
 			AcValue = 0.0;
 			AvValue = 0.0;
 			ApValue = 0.0;
+			GammaValue = 0;
+			Gamma_C4 = 0; //for printing for debug
 		}
 		else
 		{
+			//* Light response function parameters */
+			Ia = PhotoFluxDensity * (1 - scatt);    //* absorbed irradiance */
+			I2 = Ia * (1 - f) / 2;    //* useful light absorbed by PSII */
+
+			//* other input parameters and constants */
+			P = Press / 100;
+			Ca = CO2 * P; //* conversion to partial pressure Atmospheric partial pressure of CO2, kPa*/
+			Om = O;   //* mesophyle O2 partial pressure */
+			Eac = sParms.EaVc;
+
+			Kp = Kp25 * pow(Q10, (Tleaf - 25.0) / 10.0);
+			Vpr = Vpr25 * pow(Q10, (Tleaf - 25.0) / 10.0);
+			Kc = Kc25 * exp(Eac * (Tleaf - 25) / (298 * R * (Tleaf + 273))); //Kc adjusted for temperature
+			Ko = Ko25 * exp(Eao * (Tleaf - 25) / (298 * R * (Tleaf + 273)));
+			Km = Kc * (1 + Om / Ko); //* effective M-M constant for Kc in the presence of O2 */
+			
+			// The following are Arrhenius Equations for parameter temperature dependencies
+			// Vpm25 (PEPC activity rate) , Vcm25  (Rubisco Capacity rate) and Jm25 (Whole chain electron transport rate) are the rates at 25C for Vp, Vc and Jm
+			Vpmax = sParms.Vpm25 * exp(sParms.EaVp * (Tleaf - 25) / (298 * R * (Tleaf + 273)));
+			Vcmax = sParms.Vcm25 * exp(sParms.EaVc * (Tleaf - 25) / (298 * R * (Tleaf + 273)));
+			Jmax = sParms.Jm25 * exp((((Tleaf + 273) - 298) * sParms.Eaj) / (R * (Tleaf + 273) * 298)) * (1 + exp((sParms.Sj * 298 - sParms.Hj) / (R * 298)))
+				/ (1 + exp((sParms.Sj * (Tleaf + 273) - sParms.Hj) / (R * (Tleaf + 273.0))));
+			Rm = 0.5 * DarkRespiration;
+
+
+			
+			Vp1 = (Cm * Vpmax) / (Cm + Kp); //* PEP carboxylation rate, that is the rate of C4 acid generation  Eq 1 in Kim 2007*/
+			Vp2 = Vpr;
+			Vp = __max(__min(Vp1, Vp2), 0);
+			//* Enzyme limited A (Rubisco or PEP carboxylation */
+			Ac1 = (Vp + gbs * Cm - Rm);
+			Ac2 = (Vcmax - DarkRespiration);
+			//* Quadratic expression to solve for Ac */
+			a1 = 1 - (alpha / 0.047) * (Kc / Ko);
+			b1 = -(Ac1 + Ac2 + gbs * Km + (alpha / 0.047) * (gamma1 * Vcmax + DarkRespiration * Kc / Ko));
+			c1 = Ac1 * Ac2 - (Vcmax * gbs * gamma1 * Om + DarkRespiration * gbs * Km);
+			Ac = QuadSolnLower(a1, b1, c1); // this formulation would need gamma
+			Ac = __min(Ac1, Ac2);//this formulation does not need gamma- co2 compensation point
+			
+			//* Light and electron transport limited  A mediated by J */
+			
+	
 			J = minh(I2, Jmax, sParms.Theta);  //* rate of electron transport */
 			Aj1 = (x*J/2-Rm+gbs*Cm);  // Eq 4 in Kim, 2007
 			Aj2 = (1-x)*J/3-DarkRespiration;       //Eq 4 in Kim, 2007
@@ -372,17 +390,18 @@ namespace photomod
 			AcValue = Ac;
 			AvValue = 0.0;
 			ApValue = 0.0;
-		 
+
+		 	Os = alpha*AssimilationNet/(0.047*gbs)+Om; //* Bundle sheath O2 partial pressure, mbar */
+			GammaStar = gamma1*Os;
+			GammaValue = GammaStar;Gamma = (DarkRespiration*Km + Vcmax*GammaStar)/(Vcmax-DarkRespiration);
+			Gamma_C4 = Gamma; //for printing for debug
 		}
 
 		Jvalue = J;
  
 		gs_last=StomatalConductance;
-		Os = alpha*AssimilationNet/(0.047*gbs)+Om; //* Bundle sheath O2 partial pressure, mbar */
-		GammaStar = gamma1*Os;
-		GammaValue = GammaStar;
-		Gamma = (DarkRespiration*Km + Vcmax*GammaStar)/(Vcmax-DarkRespiration);
-		Gamma_C4 = Gamma; //for printing for debug
+
+
  	}
 
 
@@ -594,7 +613,7 @@ namespace photomod
 			Ci2 = Ci_m;
 			temp=EvalCi(Ci_m);
 			double temp2=maxiter;
-		} while ((abs(EvalCi(Ci_m)) >= errTolerance) || (iter < maxiter));
+		} while ((abs(EvalCi(Ci_m)) >= errTolerance) && (iter < maxiter));
 
 
 
